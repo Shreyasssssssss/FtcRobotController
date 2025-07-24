@@ -23,6 +23,20 @@ android {
     }
 }
 
+repositories {
+    maven{
+        url='https:??maven.brott.dev/'
+    }
+    maven{
+        url='https://repo.dairy.foundation/releases'
+    }
+}
+
 dependencies {
     implementation project(':FtcRobotController')
+    implementation('org.ftclib:core:2.1.1')
+    implementation "com.acmrobotics.roadrounner:core:1.0.0"
+    implementation "com.acmrobotics.roadrunner:actions:1.0.0"
+    implementation 'com.acmrobotics.dashboard:dashboard:1.0.0'
+    implementation "pagej5155.roadrunner.ftc-otos:0.1+0.1.14"
 }
