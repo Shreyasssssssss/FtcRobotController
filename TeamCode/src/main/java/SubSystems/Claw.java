@@ -1,5 +1,5 @@
 package SubSystems;
 
-public class claw {
+public class Claw {
      int weight = 10;
 }
