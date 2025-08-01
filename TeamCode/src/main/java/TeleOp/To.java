@@ -4,9 +4,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 import SubSystems.Claw;
 import SubSystems.ClawGrab;
+import SubSystems.ClimbMotors;
 import SubSystems.Sholder;
+import SubSystems.VerticalSlides;
 
 @TeleOp
 public class To extends LinearOpMode {
@@ -16,6 +20,10 @@ public class To extends LinearOpMode {
         clawGrab.initiate(hardwareMap);
         Sholder sholder = new Sholder();
         sholder.initiate(hardwareMap);
+        ClimbMotors climbMotors = new ClimbMotors();
+        climbMotors.initiate(hardwareMap);
+        VerticalSlides verticalSlides = new VerticalSlides();
+        verticalSlides.initiate(hardwareMap);
 
         waitForStart();
 
@@ -24,7 +32,9 @@ public class To extends LinearOpMode {
         ClawGrab claw = new ClawGrab();
         claw.initiate(hardwareMap);
         while (opModeIsActive()) {
+            boolean triangle = gamepad1.triangle && !previousGamePad1.triangle;
             boolean cross = gamepad1.cross && !previousGamePad1.cross;
+            boolean square = gamepad1.square && !previousGamePad1.square;
             boolean rightTrigger = gamepad1.right_trigger > 0.1 && previousGamePad1.right_trigger < 0.1;
             boolean leftTrigger = gamepad1.left_trigger > 0.1 && previousGamePad1.left_trigger < 0.1;
             if (cross) {
@@ -73,17 +83,33 @@ public class To extends LinearOpMode {
                             sholder.setState(Sholder.SState.BUCKET_SCORE);
                             break;
                     }
-                    while (opModeIsActive()) {
-                        if (gamepad1.left_bumper) {
-                            clawGrab.setState(SubSystems.ClawGrab.clawState.CLOSE);
-                        }
-                        if (gamepad1.right_bumper) {
-                            clawGrab.setState(SubSystems.ClawGrab.clawState.OPEN);
-                        }
-
+                if (square){
+                    switch (climbMotors.getState()){
+                        case STATIONARY:
+                            climbMotors.setState(ClimbMotors.States.CLIMBING);
+                            break;
+                        case CLIMBING:
+                            climbMotors.setState(ClimbMotors.States.STATIONARY);
+                            break;
                     }
+                }
+                if (triangle){
+                    switch (verticalSlides.getState()){
+                        case DOWN:
+                            verticalSlides.setState(VerticalSlides.States.UP);
+                            break;
+                        case UP:
+                            verticalSlides.setState(VerticalSlides.States.DOWN);
+                            break;
+                    }
+                }
+                    verticalSlides.update();
+                    climbMotors.update();
                     claw.update();
                     previousGamePad1.copy(gamepad1);
+                    verticalSlides.status(telemetry);
+
+                    telemetry.update();
                 }
 
             }

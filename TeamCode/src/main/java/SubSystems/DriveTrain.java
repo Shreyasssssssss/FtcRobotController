@@ -1,10 +1,9 @@
 package SubSystems;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-public class DriveTime {
+public class DriveTrain {
     DcMotor frontLeftMoter;
     DcMotor frontRightMoter;
     DcMotor backRightMoter;
