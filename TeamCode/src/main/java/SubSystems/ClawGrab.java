@@ -20,14 +20,23 @@ public class ClawGrab {
         clawServo = hardwareMap.servo.get("ClawServo");
     }
 
-    public static double clawOpen = 0.4;
+    public static double clawOpen = 0.65;
 
-    public static double clawClose = 0.5;
+    public static double clawClose = 0.38;
 
     public clawState getState(){
         return currentState;
     }
-
+    public void flip(){
+        switch (currentState){
+            case OPEN:
+                currentState = clawState.CLOSE;
+                break;
+            case CLOSE:
+                currentState = clawState.OPEN;
+                break;
+        }
+    }
     public void update(){
         switch (currentState){
             case OPEN:

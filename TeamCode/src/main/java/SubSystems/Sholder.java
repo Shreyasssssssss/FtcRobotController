@@ -14,11 +14,11 @@ public class Sholder {
     SState currentState = SState.RESTING;
     Servo rightServo;
     Servo leftServo;
-    public static double intakingPos = 0.6;
-    public static double scoutingPos = 0.5;
+    public static double intakingPos = 0.7;
+    public static double scoutingPos = 0.6;
     public static double restingPos = 0.4;
     public static double bucketPos = 0.3;
-    public static double humanIntakePos = 0.2;
+    public static double humanIntakePos = 0.58;
 
     public void initiate(HardwareMap hardwareMap){
         rightServo = hardwareMap.servo.get("RightShoulder");

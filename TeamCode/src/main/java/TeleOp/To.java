@@ -4,16 +4,25 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.robotcore.external.State;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import SubSystems.Claw;
 import SubSystems.ClawGrab;
 import SubSystems.ClimbMotors;
+import SubSystems.DriveTrain;
+import SubSystems.Extendo;
 import SubSystems.Sholder;
 import SubSystems.VerticalSlides;
+import SubSystems.Wrist;
 
 @TeleOp
 public class To extends LinearOpMode {
+    public enum RobotStates{
+        RESTING,
+        SCOUTING,
+        INTAKING
+    }
     @Override
     public void runOpMode() throws InterruptedException {
         ClawGrab clawGrab = new ClawGrab();
@@ -24,95 +33,78 @@ public class To extends LinearOpMode {
         climbMotors.initiate(hardwareMap);
         VerticalSlides verticalSlides = new VerticalSlides();
         verticalSlides.initiate(hardwareMap);
+        Extendo extendo = new Extendo();
+        extendo.initiate(hardwareMap);
+        Wrist wrist = new Wrist();
+        wrist.initiate(hardwareMap);
+        DriveTrain driveTrain = new DriveTrain();
+        driveTrain.initalize(hardwareMap);
+
 
         waitForStart();
 
         if (isStopRequested()) return;
+        RobotStates state = RobotStates.RESTING;
         Gamepad previousGamePad1 = new Gamepad();
         ClawGrab claw = new ClawGrab();
         claw.initiate(hardwareMap);
         while (opModeIsActive()) {
-            boolean triangle = gamepad1.triangle && !previousGamePad1.triangle;
-            boolean cross = gamepad1.cross && !previousGamePad1.cross;
-            boolean square = gamepad1.square && !previousGamePad1.square;
-            boolean rightTrigger = gamepad1.right_trigger > 0.1 && previousGamePad1.right_trigger < 0.1;
-            boolean leftTrigger = gamepad1.left_trigger > 0.1 && previousGamePad1.left_trigger < 0.1;
-            if (cross) {
-                switch (claw.getState()) {
-                    case CLOSE:
-                        claw.setState(ClawGrab.clawState.OPEN);
-                        break;
-                    case OPEN:
-                        claw.setState(ClawGrab.clawState.CLOSE);
-                        break;
-                }
+            boolean rightBumper = gamepad1.right_bumper && previousGamePad1.right_bumper;
+            boolean leftBumber = gamepad1.left_bumper && previousGamePad1.left_bumper;
+            boolean leftTrigger = gamepad1.left_trigger > 0.1 && previousGamePad1.left_trigger <0.1;
+            previousGamePad1.copy(gamepad1);
+
+            if (rightBumper) {
+               state = RobotStates.RESTING;
             }
-            if (rightTrigger) {
-                switch (sholder.getState()) {
+            if (leftBumber) {
+                switch (state){
+                    case RESTING:
                     case INTAKING:
-                        sholder.setState(Sholder.SState.SCOUTING);
+                        state = RobotStates.SCOUTING;
                         break;
                     case SCOUTING:
-                        sholder.setState(Sholder.SState.RESTING);
+                        state = RobotStates.INTAKING;
                         break;
-                    case RESTING:
-                        sholder.setState(Sholder.SState.BUCKET_SCORE);
-                        break;
-                    case BUCKET_SCORE:
-                        sholder.setState(Sholder.SState.HUMAN_INTAKING);
-                        break;
-                    case HUMAN_INTAKING:
-                        sholder.setState(Sholder.SState.INTAKING);
-                        break;
+            }
+            if (leftTrigger) {
+                switch (state){
+                    case INTAKING:
+                    case SCOUTING:
+                        clawGrab.flip();
                 }
-                if (leftTrigger) {
-                    switch (sholder.getState()) {
-                        case INTAKING:
-                            sholder.setState(Sholder.SState.HUMAN_INTAKING);
-                            break;
-                        case SCOUTING:
-                            sholder.setState(Sholder.SState.INTAKING);
-                            break;
-                        case RESTING:
-                            sholder.setState(Sholder.SState.SCOUTING);
-                            break;
-                        case BUCKET_SCORE:
-                            sholder.setState(Sholder.SState.RESTING);
-                            break;
-                        case HUMAN_INTAKING:
-                            sholder.setState(Sholder.SState.BUCKET_SCORE);
-                            break;
-                    }
-                if (square){
-                    switch (climbMotors.getState()){
-                        case STATIONARY:
-                            climbMotors.setState(ClimbMotors.States.CLIMBING);
-                            break;
-                        case CLIMBING:
-                            climbMotors.setState(ClimbMotors.States.STATIONARY);
-                            break;
-                    }
-                }
-                if (triangle){
-                    switch (verticalSlides.getState()){
-                        case DOWN:
-                            verticalSlides.setState(VerticalSlides.States.UP);
-                            break;
-                        case UP:
-                            verticalSlides.setState(VerticalSlides.States.DOWN);
-                            break;
-                    }
-                }
-                    verticalSlides.update();
-                    climbMotors.update();
-                    claw.update();
-                    previousGamePad1.copy(gamepad1);
-                    verticalSlides.status(telemetry);
+            }
+            switch (state){
+                case RESTING:
+                    sholder.setState(Sholder.SState.RESTING);
+                    clawGrab.setState(ClawGrab.clawState.CLOSE);
+                    wrist.setState(Wrist.States.FORWARDS);
+                    extendo.setState(Extendo.States.RETRACT);
+                    verticalSlides.setState(VerticalSlides.States.DOWN);
+                    break;
+                case SCOUTING:
+                    sholder.setState(Sholder.SState.SCOUTING);
+                    wrist.setState(Wrist.States.FORWARDS);
+                    extendo.setState(Extendo.States.EXTENDED);
+                    verticalSlides.setState(VerticalSlides.States.DOWN);
+                    break;
+                case INTAKING:
+                    sholder.setState(Sholder.SState.INTAKING);
+                    wrist.setState(Wrist.States.FORWARDS);
+                    extendo.setState(Extendo.States.EXTENDED);
+                    verticalSlides.setState(VerticalSlides.States.DOWN);
+            }
+            driveTrain.update(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+            telemetry.addData("Robot State", state);
+            verticalSlides.update();
+            climbMotors.update();
+            claw.update();
+            previousGamePad1.copy(gamepad1);
+            verticalSlides.status(telemetry);
 
-                    telemetry.update();
+            telemetry.update();
                 }
-
             }
         }
     }
-}
+
